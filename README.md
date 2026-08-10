@@ -1,7 +1,5 @@
 # 自动解析目标网站 IP 并更新 A 记录
 
-> 本仓库为公开版，**Fork 后配置好 Actions secrets 即可直接使用**，无需改代码。
-
 自动解析某个使用 Cloudflare CDN 的网站（如 `www.shopify.com`）的 IP，把这些 IP 写入你指定域名的 A 记录，实现"借用"其边缘 IP 的效果。
 
 ## 原理

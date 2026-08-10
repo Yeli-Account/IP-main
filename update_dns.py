@@ -1,17 +1,4 @@
 #!/usr/bin/env python3
-"""Resolve a target domain's IPs via public DNS and write them as A records.
-
-Useful for sites behind Cloudflare CDN (e.g. www.shopify.com): resolve their
-edge IPs and point your own record at the same IPs.
-
-Reads from environment variables:
-    CF_API_TOKEN - Cloudflare API token (Zone.DNS edit permission)
-    CF_ZONE_ID   - Cloudflare zone id
-    CF_RECORD    - target DNS name; use "#" to fall back to the zone root
-    CF_PROXY     - "#" keeps the record grey (DNS only), "*" makes it orange (proxied)
-    CF_TARGET    - target site to scrape IPs from, any URL-ish form is fine
-"""
-
 import json
 import logging
 import os
@@ -56,7 +43,6 @@ IP_RE = re.compile(r"^(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})$")
 
 
 def query_doh(base: str, host: str) -> list[str]:
-    """Query a single DoH server once, return valid A-record IPs (may be empty)."""
     url = base.format(name=urllib.parse.quote(host))
     req = urllib.request.Request(url, headers={
         "User-Agent": "Mozilla/5.0",
@@ -74,16 +60,6 @@ def query_doh(base: str, host: str) -> list[str]:
 
 
 def resolve_ips(host: str) -> list[str]:
-    """Resolve a host reliably and keep only the stable IPs.
-
-    Multiple DoH servers are queried concurrently over several rounds.
-    Edge IPs that show up in a majority of the successful samples are kept;
-    one-off rotating IPs are dropped so the record list does not grow forever.
-
-    Fallbacks, in order, so this never fails outright:
-      1. any DoH answer (even a single one) is treated as usable,
-      2. if every DoH query fails, fall back to the system resolver.
-    """
     import concurrent.futures as cf
     import socket
 
@@ -134,7 +110,6 @@ def resolve_ips(host: str) -> list[str]:
 
 
 def normalize_target(target: str) -> str:
-    """Extract a bare hostname from any URL-ish input."""
     target = target.strip()
     if not target:
         return ""
@@ -143,7 +118,6 @@ def normalize_target(target: str) -> str:
         host = parsed.hostname or ""
     else:
         host = target.split("/")[0].split("?")[0].split("#")[0]
-    # strip port if present
     if ":" in host:
         host = host.split(":")[0]
     return host.lower()
